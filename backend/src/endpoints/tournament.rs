@@ -81,7 +81,7 @@ async fn post_tournament(
     config: Data<crate::ServerConfig>,
     body: Json<CreateTournament>,
 ) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    let tournament_id = if cfg!(debug_assertions) {
+    let tournament_id = if config.use_stub {
         let params = riven::models::tournament_stub_v5::TournamentRegistrationParametersV5 {
             provider_id: config.provider_id,
             name: Some(body.name.clone()),

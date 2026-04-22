@@ -17,6 +17,7 @@ use riven::RiotApi;
 #[derive(Debug, Copy, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ServerConfig {
     provider_id: i32,
+    use_stub: bool,
 }
 
 async fn setup_tournament(api: Arc<RiotApi>, collection: mongodb::Collection<ServerConfig>) -> anyhow::Result<ServerConfig> {
@@ -29,7 +30,10 @@ async fn setup_tournament(api: Arc<RiotApi>, collection: mongodb::Collection<Ser
         RegionalRoute::AMERICAS, &provider_data
     ).await?;
 
-    let config = ServerConfig { provider_id };
+    let config = ServerConfig {
+        provider_id,
+        use_stub: std::env::var("USE_STUB").map(|v| v.parse().unwrap_or(false)).unwrap_or(false)
+    };
     collection.replace_one(
         mongodb::bson::doc! { "provider_id": provider_id },
         &config
@@ -39,17 +43,6 @@ async fn setup_tournament(api: Arc<RiotApi>, collection: mongodb::Collection<Ser
 
     Ok(config)
 }
-// #[cfg(not(debug_assertions))]
-// async fn setup_tournament(api: Arc<RiotApi>) -> anyhow::Result<i32> {
-//     use riven::models::tournament_v5::ProviderRegistrationParametersV5;
-//     let provider_data = ProviderRegistrationParametersV5 {
-//         region: TournamentRegion::NA,
-//         url: std::env::var("RIOT_API_CALLBACK_ENDPOINT")?,
-//     };
-//     api.tournament_v5().register_provider_data(
-//         RegionalRoute::AMERICAS, &provider_data
-//     ).await.context("Could not create tournament provider")
-// }
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {

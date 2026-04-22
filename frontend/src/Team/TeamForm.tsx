@@ -107,6 +107,7 @@ const TournamentListItem: FunctionComponent<TournamentListItemProps> = props => 
             <div className='d-flex w-100 justify-content-between'>
                 <p>{tournamentMapItem.name}</p>
                 <button
+                    type='button'
                     className='btn btn-secondary py-0'
                     onClick={() => props.removeHandler(tournamentMapItem._id['$oid'])}
                 >

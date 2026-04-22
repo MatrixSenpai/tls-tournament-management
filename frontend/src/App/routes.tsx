@@ -6,7 +6,7 @@ import {
     SingleTournament,
     UpdateTournamentForm,
 } from '../Tournament'
-import { CreateTeamForm, ListTeam } from '../Team'
+import { CreateTeamForm, ListTeam, SingleTeam, UpdateTeamForm } from '../Team'
 import { ListPlayer } from '../Player'
 import { ListMatch } from '../Matches'
 
@@ -85,6 +85,23 @@ export const router = createBrowserRouter([
                         },
                     },
                     {
+                        path: ':id/details',
+                        Component: SingleTeam,
+                        loader: async ({ params }) => {
+                            let team = await fetch(`/api/v1/teams/${params.id}`).then(res =>
+                                res.json(),
+                            )
+                            let tournaments = await fetch(
+                                `/api/v1/teams/${params.id}/tournaments`,
+                            ).then(res => res.json())
+                            let players = await fetch(`/api/v1/teams/${params.id}/players`).then(
+                                res => res.json(),
+                            )
+
+                            return { team, tournaments, players, matches: [] }
+                        },
+                    },
+                    {
                         path: 'create',
                         Component: CreateTeamForm,
                         loader: async () => {
@@ -92,6 +109,20 @@ export const router = createBrowserRouter([
                                 res.json(),
                             )
                             return { tournaments }
+                        },
+                    },
+                    {
+                        path: ':id/edit',
+                        Component: UpdateTeamForm,
+                        loader: async ({ params }) => {
+                            let team = await fetch(`/api/v1/teams/${params.id}`).then(res =>
+                                res.json(),
+                            )
+                            let tournaments = await fetch('/api/v1/tournaments').then(res =>
+                                res.json(),
+                            )
+
+                            return { team, tournaments }
                         },
                     },
                 ],
