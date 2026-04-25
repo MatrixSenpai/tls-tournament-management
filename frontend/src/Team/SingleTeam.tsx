@@ -1,5 +1,5 @@
 import type { FunctionComponent } from 'react'
-import { Link, useLoaderData } from 'react-router'
+import { useLoaderData } from 'react-router'
 import type { Tournament } from '../bindings/Tournament.ts'
 import type { Team } from '../bindings/Team.ts'
 import type { Match } from '../bindings/Match.ts'

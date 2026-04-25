@@ -7,7 +7,7 @@ import {
     UpdateTournamentForm,
 } from '../Tournament'
 import { CreateTeamForm, ListTeam, SingleTeam, UpdateTeamForm } from '../Team'
-import { ListPlayer } from '../Player'
+import { CreatePlayerForm, ListPlayer, SinglePlayer, UpdatePlayerForm } from '../Player'
 import { ListMatch } from '../Matches'
 
 export const router = createBrowserRouter([
@@ -137,6 +137,35 @@ export const router = createBrowserRouter([
                         loader: async () => {
                             let players = await fetch('/api/v1/players').then(res => res.json())
                             return { players }
+                        },
+                    },
+                    {
+                        path: ':id/details',
+                        Component: SinglePlayer,
+                        loader: async ({ params }) => {
+                            let player = await fetch(`/api/v1/players/${params.id}`).then(res =>
+                                res.json(),
+                            )
+                            return { player }
+                        },
+                    },
+                    {
+                        path: 'create',
+                        Component: CreatePlayerForm,
+                        loader: async () => {
+                            let teams = await fetch('/api/v1/teams').then(res => res.json())
+                            return { teams }
+                        },
+                    },
+                    {
+                        path: ':id/edit',
+                        Component: UpdatePlayerForm,
+                        loader: async ({ params }) => {
+                            let player = await fetch(`/api/v1/players/${params.id}`).then(res =>
+                                res.json(),
+                            )
+                            let teams = await fetch('/api/v1/teams').then(res => res.json())
+                            return { player, teams }
                         },
                     },
                 ],
