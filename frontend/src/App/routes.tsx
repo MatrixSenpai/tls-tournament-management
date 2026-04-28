@@ -8,7 +8,7 @@ import {
 } from '../Tournament'
 import { CreateTeamForm, ListTeam, SingleTeam, UpdateTeamForm } from '../Team'
 import { CreatePlayerForm, ListPlayer, SinglePlayer, UpdatePlayerForm } from '../Player'
-import { ListMatch } from '../Matches'
+import { CreateMatchForm, ListMatch, SingleMatch, UpdateMatchForm } from '../Matches'
 
 export const router = createBrowserRouter([
     {
@@ -177,7 +177,72 @@ export const router = createBrowserRouter([
                     {
                         index: true,
                         Component: ListMatch,
-                        loader: async () => [],
+                        loader: async () => {
+                            let matches = await fetch(`/api/v1/matches`).then(res => res.json())
+                            return Promise.all(
+                                matches.map(async match => {
+                                    let tournament = await fetch(
+                                        `/api/v1/matches/${match._id['$oid']}/tournament`,
+                                    ).then(res => res.json())
+                                    let teams = await fetch(
+                                        `/api/v1/matches/${match._id['$oid']}/teams`,
+                                    ).then(res => res.json())
+
+                                    const team_one = teams.find(
+                                        v => v._id['$oid'] === match.team_one_id['$oid'],
+                                    )
+                                    const team_two = teams.find(
+                                        v => v._id['$oid'] === match.team_two_id['$oid'],
+                                    )
+
+                                    return { _id: match._id, match, tournament, team_one, team_two }
+                                }),
+                            )
+                        },
+                    },
+                    {
+                        path: ':id/details',
+                        Component: SingleMatch,
+                        loader: async ({ params }) => {
+                            let match = await fetch(`/api/v1/matches/${params.id}`).then(res =>
+                                res.json(),
+                            )
+                            let teams = await fetch(`/api/v1/matches/${params.id}/teams`).then(
+                                res => res.json(),
+                            )
+                            const team_one = teams.find(
+                                v => v._id['$oid'] === match.team_one_id['$oid'],
+                            )
+                            const team_two = teams.find(
+                                v => v._id['$oid'] === match.team_two_id['$oid'],
+                            )
+                            return { match, team_one, team_two }
+                        },
+                    },
+                    {
+                        path: 'create',
+                        Component: CreateMatchForm,
+                        loader: async () => {
+                            let tournaments = await fetch(`/api/v1/tournaments`).then(res =>
+                                res.json(),
+                            )
+                            let teams = await fetch(`/api/v1/teams`).then(res => res.json())
+                            return { tournaments, teams }
+                        },
+                    },
+                    {
+                        path: ':id/edit',
+                        Component: UpdateMatchForm,
+                        loader: async ({ params }) => {
+                            let match = await fetch(`/api/v1/matches/${params.id}`).then(res =>
+                                res.json(),
+                            )
+                            let tournaments = await fetch(`/api/v1/tournaments`).then(res =>
+                                res.json(),
+                            )
+                            let teams = await fetch(`/api/v1/teams`).then(res => res.json())
+                            return { match, tournaments, teams }
+                        },
                     },
                 ],
             },

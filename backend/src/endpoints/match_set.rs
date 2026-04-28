@@ -25,6 +25,7 @@ pub fn match_routes(cfg: &mut ServiceConfig) {
     cfg.service(
         scope("/matches")
             .service(get_matches)
+            .service(get_match_by_id)
             .service(get_tournament_by_match_id)
             .service(get_teams_by_match_id)
             .service(get_games_by_match_id)

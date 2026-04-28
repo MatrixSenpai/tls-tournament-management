@@ -1,6 +1,6 @@
 import type { FunctionComponent } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
-import { ListPage } from '../common/ListPage.tsx'
+import { ListPage } from '../common'
 import { useLoaderData, useNavigate } from 'react-router'
 import type { Match } from '../bindings/Match.ts'
 import type { Team } from '../bindings/Team.ts'
