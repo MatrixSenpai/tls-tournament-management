@@ -1,6 +1,5 @@
 #![allow(unused, dead_code)]
 
-mod schema;
 mod endpoints;
 mod database;
 

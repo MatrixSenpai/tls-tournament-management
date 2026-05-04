@@ -22,3 +22,7 @@ Cargo.lock
 .idea/
 
 .env
+.nx/installation
+.nx/cache
+.nx/workspace-data
+.nx/self-healing

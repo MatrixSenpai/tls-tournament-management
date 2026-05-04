@@ -2,7 +2,7 @@ import type { FunctionComponent } from 'react'
 import * as Yup from 'yup'
 import { Formik } from 'formik'
 import { TournamentForm } from './TournamentForm.tsx'
-import type { CreateTournament } from '../bindings/CreateTournament.ts'
+import type { CreateTournament } from '../api/types/CreateTournament.ts'
 import { Link, useNavigate } from 'react-router'
 
 export interface CreateTournamentProps {}

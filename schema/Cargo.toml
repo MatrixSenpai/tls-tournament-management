@@ -1,0 +1,11 @@
+[package]
+name = "schema"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+bson = "2"
+chrono = { version = "0.4.44", features = ["serde"] }
+riven = "2.78.0"
+ts-rs = { version = "12.0.1", features = ["chrono-impl", "bson-uuid-impl"] }

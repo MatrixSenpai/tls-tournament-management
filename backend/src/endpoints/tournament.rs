@@ -13,13 +13,13 @@ use actix_web::{
         scope,
     }
 };
-use crate::{
-    database::*,
-    schema::{
-        tournament::*,
-        team::Team,
-        match_set::Match,
-    }
+use crate::database::Database;
+use schema::{
+    database::{
+        TournamentState,
+        Tournament as DBTournament,
+    },
+    api::*
 };
 
 pub fn tournament_routes(cfg: &mut ServiceConfig) {
@@ -27,8 +27,6 @@ pub fn tournament_routes(cfg: &mut ServiceConfig) {
         scope("/tournaments")
             .service(get_tournaments)
             .service(get_tournament_by_id)
-            .service(get_teams_by_tournament_id)
-            .service(get_matches_by_tournament_id)
             .service(post_tournament)
             .service(patch_tournament)
             .service(delete_tournament)
@@ -37,7 +35,11 @@ pub fn tournament_routes(cfg: &mut ServiceConfig) {
 
 #[get("")]
 async fn get_tournaments(db: Data<Database>) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    let results = db.find_all::<Tournament>(CollectionName::Tournament, None).await?;
+    let results: Vec<Tournament> = db.find_all::<DBTournament>(None)
+        .await?
+        .into_iter()
+        .map(|v| v.into())
+        .collect();
     Ok(Json(results))
 }
 
@@ -46,32 +48,8 @@ async fn get_tournament_by_id(
     db: Data<Database>,
     id: Path<ObjectId>,
 ) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    let result = db.find::<Tournament>(CollectionName::Tournament, id.into_inner()).await?;
+    let result: Tournament = db.find::<DBTournament>(id.into_inner()).await?.into();
     Ok(Json(result))
-}
-
-#[get("{id}/teams")]
-async fn get_teams_by_tournament_id(
-    db: Data<Database>,
-    id: Path<ObjectId>,
-) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    let results = db.find_all::<Team>(
-        CollectionName::Team,
-        Some(doc! { "tournament_ids": id.into_inner() }),
-    ).await?;
-    Ok(Json(results))
-}
-
-#[get("{id}/matches")]
-async fn get_matches_by_tournament_id(
-    db: Data<Database>,
-    id: Path<ObjectId>,
-) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    let results = db.find_all::<Match>(
-        CollectionName::Match,
-        Some(doc! { "tournament_id": id.into_inner() }),
-    ).await?;
-    Ok(Json(results))
 }
 
 #[post("")]
@@ -102,15 +80,9 @@ async fn post_tournament(
     };
 
     let state = if Utc::now().ge(&body.start_date) { TournamentState::Running } else { TournamentState::Upcoming };
-    let tournament = Tournament {
-        internal_id: ObjectId::new(),
-        riot_id: tournament_id,
-        name: body.name.clone(),
-        start_date: body.start_date,
-        state,
-    };
+    let tournament = body.clone().to_tournament(tournament_id as usize);
 
-    db.create(CollectionName::Tournament, &tournament).await?;
+    db.create(&tournament).await?;
     Ok(Json(tournament))
 }
 
@@ -120,7 +92,7 @@ async fn patch_tournament(
     id: Path<ObjectId>,
     body: Json<UpdateTournament>,
 ) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    db.update(CollectionName::Tournament, id.into_inner(), body.into_inner()).await?;
+    db.update(id.into_inner(), &body.into_inner()).await?;
     Ok(HttpResponse::Ok())
 }
 
@@ -129,6 +101,6 @@ async fn delete_tournament(
     db: Data<Database>,
     id: Path<ObjectId>,
 ) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    db.delete::<Tournament>(CollectionName::Tournament, id.into_inner()).await?;
+    db.delete::<DBTournament>(id.into_inner()).await?;
     Ok(HttpResponse::Ok())
 }

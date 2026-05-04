@@ -12,12 +12,10 @@ use actix_web::{
         scope,
     }
 };
-use crate::{
-    database::*,
-    schema::{
-        player::*,
-        team::Team,
-    }
+use crate::database::Database;
+use schema::{
+    api::*,
+    database::Player as DBPlayer,
 };
 
 pub fn player_routes(cfg: &mut ServiceConfig) {
@@ -25,7 +23,6 @@ pub fn player_routes(cfg: &mut ServiceConfig) {
         scope("/players")
             .service(get_players)
             .service(get_player_by_id)
-            .service(get_team_by_player_id)
             .service(post_player)
             .service(patch_player)
             .service(delete_player)
@@ -34,7 +31,10 @@ pub fn player_routes(cfg: &mut ServiceConfig) {
 
 #[get("")]
 async fn get_players(db: Data<Database>) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    let results = db.find_all::<Player>(CollectionName::Player, None).await?;
+    let results: Vec<Player> = db.find_all::<DBPlayer>(None).await?
+        .into_iter()
+        .map(|v| v.into())
+        .collect();
     Ok(Json(results))
 }
 
@@ -43,18 +43,8 @@ async fn get_player_by_id(
     db: Data<Database>,
     id: Path<ObjectId>,
 ) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    let result = db.find::<Player>(CollectionName::Player, id.into_inner()).await?;
+    let result: Player = db.find::<DBPlayer>(id.into_inner()).await?.into();
     Ok(Json(result))
-}
-
-#[get("{id}/team")]
-async fn get_team_by_player_id(
-    db: Data<Database>,
-    id: Path<ObjectId>,
-) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    let player = db.find::<Player>(CollectionName::Player, id.into_inner()).await?;
-    let team = db.find::<Team>(CollectionName::Team, player.team_id).await?;
-    Ok(Json(team))
 }
 
 #[post("")]
@@ -63,23 +53,15 @@ async fn post_player(
     api: Data<Arc<riven::RiotApi>>,
     body: Json<CreatePlayer>,
 ) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    let (game_name, tag_line) = body.riot_account_name.split_once("#")
+    let (game_name, tag_line) = body.riot_name.split_once("#")
         .ok_or(anyhow::Error::msg("No tagline found in provided id!"))?;
     let riot_player_data = api.account_v1().get_by_riot_id(
         RegionalRoute::AMERICAS,
         game_name, tag_line,
     ).await?.ok_or(anyhow::Error::msg("Riot account not found!"))?;
 
-    let player = Player {
-        internal_id: ObjectId::new(),
-        team_id: body.team_id,
-        riot_name: body.riot_account_name.clone(),
-        riot_puuid: riot_player_data.puuid.clone(),
-        discord_name: body.discord_name.clone(),
-        role: body.role,
-        is_team_captain: body.is_team_captain,
-    };
-    db.create(CollectionName::Player, &player).await?;
+    let player = body.clone().to_player(riot_player_data.puuid);
+    db.create(&player).await?;
     Ok(Json(player))
 }
 
@@ -89,7 +71,7 @@ async fn patch_player(
     id: Path<ObjectId>,
     body: Json<UpdatePlayer>,
 ) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    db.update(CollectionName::Player, id.into_inner(), body.into_inner()).await?;
+    db.update(id.into_inner(), &body.into_inner()).await?;
     Ok(HttpResponse::Ok())
 }
 
@@ -98,6 +80,6 @@ async fn delete_player(
     db: Data<Database>,
     id: Path<ObjectId>,
 ) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    db.delete::<Player>(CollectionName::Player, id.into_inner()).await?;
+    db.delete::<DBPlayer>(id.into_inner()).await?;
     Ok(HttpResponse::Ok())
 }

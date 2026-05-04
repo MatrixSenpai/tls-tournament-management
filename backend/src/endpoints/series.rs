@@ -14,23 +14,23 @@ use actix_web::{
 use crate::database::Database;
 use schema::{
     api::*,
-    database::Team as DBTeam,
+    database::Series as DBSeries,
 };
 
-pub fn team_routes(cfg: &mut ServiceConfig) {
+pub fn series_routes(cfg: &mut ServiceConfig) {
     cfg.service(
-        scope("/teams")
-            .service(get_teams)
-            .service(get_team_by_id)
-            .service(post_team)
-            .service(patch_team)
-            .service(delete_team)
+        scope("/series")
+            .service(get_series)
+            .service(get_series_by_id)
+            .service(post_series)
+            .service(patch_series)
+            .service(delete_series)
     );
 }
 
 #[get("")]
-async fn get_teams(db: Data<Database>) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    let results: Vec<Team> = db.find_all::<DBTeam>(None).await?
+async fn get_series(db: Data<Database>) -> Result<impl Responder, Box<dyn std::error::Error>> {
+    let results: Vec<Series> = db.find_all::<DBSeries>(None).await?
         .into_iter()
         .map(|v| v.into())
         .collect();
@@ -38,39 +38,48 @@ async fn get_teams(db: Data<Database>) -> Result<impl Responder, Box<dyn std::er
 }
 
 #[get("{id}")]
-async fn get_team_by_id(
+async fn get_series_by_id(
     db: Data<Database>,
-    id: Path<ObjectId>,
+    id: Path<ObjectId>
 ) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    let result: Team = db.find::<DBTeam>(id.into_inner()).await?.into();
+    let result: Series = db.find::<DBSeries>(id.into_inner()).await?.into();
     Ok(Json(result))
 }
 
 #[post("")]
-async fn post_team(
+async fn post_series(
     db: Data<Database>,
-    body: Json<CreateTeam>,
+    body: Json<CreateSeries>,
 ) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    let team = body.clone().to_team();
-    db.create(&team).await?;
-    Ok(Json(team))
+    let series = DBSeries::new(
+        body.start,
+        body.state,
+        body.kind,
+        body.result,
+        body.drafter_link.clone(),
+        body.tournament_id,
+        body.team_one_id,
+        body.team_two_id,
+    );
+    db.create(&series).await?;
+    Ok(Json(series))
 }
 
 #[patch("{id}")]
-async fn patch_team(
+async fn patch_series(
     db: Data<Database>,
     id: Path<ObjectId>,
-    body: Json<UpdateTeam>,
+    body: Json<UpdateSeries>,
 ) -> Result<impl Responder, Box<dyn std::error::Error>> {
     db.update(id.into_inner(), &body.into_inner()).await?;
     Ok(HttpResponse::Ok())
 }
 
 #[delete("{id}")]
-async fn delete_team(
+async fn delete_series(
     db: Data<Database>,
     id: Path<ObjectId>,
 ) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    db.delete::<DBTeam>(id.into_inner()).await?;
+    db.delete::<DBSeries>(id.into_inner()).await?;
     Ok(HttpResponse::Ok())
 }

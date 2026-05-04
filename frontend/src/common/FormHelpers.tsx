@@ -36,8 +36,8 @@ export const SelectFormField: FunctionComponent<SelectFormFieldProps> = props =>
             <label htmlFor={field.name} className='form-label'>
                 {props.label}
             </label>
-            <select className='form-select' {...field} {...props}>
-                <option selected disabled>
+            <select className='form-select' {...field}>
+                <option selected disabled hidden value=''>
                     Select option...
                 </option>
                 {props.options.map((v: SelectOption, i: number) => (

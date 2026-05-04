@@ -1,12 +1,13 @@
 import type { FunctionComponent } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
-import type { Tournament } from '../bindings/Tournament.ts'
-import { ListPage } from '../common/ListPage.tsx'
+import { ListPage } from '../common'
 import { useLoaderData, useNavigate } from 'react-router'
+import type { Tournament } from '../api/types/Tournament.ts'
+import { useGetTournaments } from '../api'
 
 const columns: ColumnDef<Tournament>[] = [
     {
-        accessorKey: '_id.$oid',
+        accessorKey: 'id',
         header: 'Tournament ID',
         cell: info => info.getValue(),
     },
@@ -34,7 +35,9 @@ const columns: ColumnDef<Tournament>[] = [
 export interface ListTournamentProps {}
 export const ListTournament: FunctionComponent<ListTournamentProps> = props => {
     let navigate = useNavigate()
-    const { tournaments } = useLoaderData<{ tournaments: Tournament[] }>()
+
+    const { tournaments, isLoading, error } = useGetTournaments()
+
     const showTournament = (id: string) => {
         navigate(`/tournaments/${id}/details`)
     }
@@ -44,7 +47,7 @@ export const ListTournament: FunctionComponent<ListTournamentProps> = props => {
             pageTitle='Tournaments'
             createTitle='Create Tournament'
             createLink='/tournaments/create'
-            data={tournaments}
+            data={tournaments ?? []}
             columns={columns}
             navigation={showTournament}
         />

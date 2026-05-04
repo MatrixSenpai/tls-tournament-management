@@ -1,9 +1,12 @@
 import type { FunctionComponent } from 'react'
 import { Link, NavLink } from 'react-router'
+import { useUserContext } from './authenticationHelper.tsx'
 
 export interface NavigationProps {}
 // @ts-ignore
 export const Navigation: FunctionComponent<NavigationProps> = props => {
+    const { user } = useUserContext()
+
     return (
         <nav className='navbar navbar-expand-lg bg-body-tertiary'>
             <div className='container-fluid'>
@@ -49,32 +52,43 @@ export const Navigation: FunctionComponent<NavigationProps> = props => {
                     </ul>
                 </div>
 
-                {/*<div>*/}
-                {/*    <ul className='navbar-nav mb-2 mb-lg-0'>*/}
-                {/*        <li className='nav-item dropdown'>*/}
-                {/*            <a*/}
-                {/*                className='nav-link dropdown-toggle'*/}
-                {/*                href='#'*/}
-                {/*                role='button'*/}
-                {/*                data-bs-toggle='dropdown'*/}
-                {/*            >*/}
-                {/*                <i className='bi bi-person me-2' />*/}
-                {/*                MatrixSenpai*/}
-                {/*            </a>*/}
-                {/*            <ul className='dropdown-menu'>*/}
-                {/*                <li>*/}
-                {/*                    <span className='dropdown-item'>Settings</span>*/}
-                {/*                </li>*/}
-                {/*                <li>*/}
-                {/*                    <hr className='dropdown-divider' />*/}
-                {/*                </li>*/}
-                {/*                <li>*/}
-                {/*                    <span className='dropdown-item'>Sign Out</span>*/}
-                {/*                </li>*/}
-                {/*            </ul>*/}
-                {/*        </li>*/}
-                {/*    </ul>*/}
-                {/*</div>*/}
+                <div>
+                    {user ? (
+                        <ul className='navbar-nav mb-2 mb-lg-0'>
+                            <li className='nav-item dropdown'>
+                                <a
+                                    className='nav-link dropdown-toggle'
+                                    href='#'
+                                    role='button'
+                                    data-bs-toggle='dropdown'
+                                >
+                                    <i className='bi bi-person me-2' />
+                                    MatrixSenpai
+                                </a>
+                                <ul className='dropdown-menu'>
+                                    <li>
+                                        <span className='dropdown-item'>Settings</span>
+                                    </li>
+                                    <li>
+                                        <hr className='dropdown-divider' />
+                                    </li>
+                                    <li>
+                                        <span className='dropdown-item'>Sign Out</span>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    ) : (
+                        <div className='d-flex'>
+                            <a
+                                className='btn btn-outline-success'
+                                href='https://discord.com/oauth2/authorize?response_type=code&client_id=1491653374024876033&scope=identify&state=asdf&redirect_uri=http://localhost:8214/auth/callback&prompt=consent'
+                            >
+                                Login
+                            </a>
+                        </div>
+                    )}
+                </div>
             </div>
         </nav>
     )
