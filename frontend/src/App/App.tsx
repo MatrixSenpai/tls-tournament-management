@@ -1,14 +1,13 @@
-import type { FunctionComponent } from 'react'
+import { FunctionComponent } from 'react'
 import { RouterProvider } from 'react-router'
-import { router } from './routes.tsx'
-import { UserContextProvider } from './authenticationHelper.tsx'
+import { router } from './router'
+import { AuthProvider } from '../common'
 
 export interface AppProps {}
-// @ts-ignore
 export const App: FunctionComponent<AppProps> = props => {
     return (
-        <UserContextProvider>
+        <AuthProvider>
             <RouterProvider router={router} />
-        </UserContextProvider>
+        </AuthProvider>
     )
 }

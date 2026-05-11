@@ -1,13 +1,12 @@
-import type { FunctionComponent } from 'react'
-import { Navigation } from './Navigation.tsx'
+import { FunctionComponent } from 'react'
 import { Outlet } from 'react-router'
+import { Navbar } from './Navbar'
 
 export interface LayoutProps {}
-// @ts-ignore
 export const Layout: FunctionComponent<LayoutProps> = props => {
     return (
         <>
-            <Navigation />
+            <Navbar />
             <div className='container my-4'>
                 <Outlet />
             </div>

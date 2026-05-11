@@ -3,4 +3,4 @@ import type { Player } from "./Player";
 import type { Series } from "./Series";
 import type { Tournament } from "./Tournament";
 
-export type Team = { id: string, name: string, short_name: string, active: boolean, tournaments: Array<Tournament>, players: Array<Player>, series: Array<Series>, };
+export type Team = { id: string, name: string, short_name: string, active: boolean, tournaments: Array<Tournament>, captains: Array<Player>, players: Array<Player>, series: Array<Series>, };

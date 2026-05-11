@@ -13,6 +13,7 @@ pub fn api_routes(cfg: &mut ServiceConfig) {
         .service(authorization::auth_route)
         .service(
             scope("/api/v1")
+                .service(authorization::revalidate)
                 .configure(tournament::tournament_routes)
                 .configure(team::team_routes)
                 .configure(player::player_routes)

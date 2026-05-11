@@ -44,7 +44,9 @@ struct DiscordUser {
 pub struct TokenClaims {
     pub sub: String,
     pub usr: String,
+    pub iss: String,
     pub adm: bool,
+    pub exp: chrono::DateTime<chrono::Utc>,
 }
 
 #[get("/auth/finalize")]
@@ -89,7 +91,45 @@ pub async fn auth_route(
     let claims = TokenClaims {
         sub: db_user.discord_id.clone(),
         usr: db_user.discord_name.clone(),
+        iss: "TLS Tournament Admin".to_string(),
         adm: db_user.admin,
+        exp: chrono::Utc::now().checked_add_days(chrono::Days::new(30)).unwrap(),
+    };
+    let token = jsonwebtoken::encode(
+        &jsonwebtoken::Header::default(),
+        &claims,
+        &jsonwebtoken::EncodingKey::from_secret(std::env::var("INTERNAL_SECRET")?.as_ref()),
+    )?;
+
+    Ok(token)
+}
+
+#[get("/auth/revalidate")]
+pub async fn revalidate(
+    database: Data<Database>,
+    token: actix_web_httpauth::extractors::bearer::BearerAuth,
+) -> Result<impl Responder, Box<dyn std::error::Error>> {
+    let mut validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::HS256);
+    validation.set_required_spec_claims(&["iss"]);
+    validation.validate_exp = false;
+    validation.set_issuer(&["TLS Tournament Admin"]);
+
+    let decoded = jsonwebtoken::decode::<TokenClaims>(
+        &token.token(),
+        &jsonwebtoken::DecodingKey::from_secret(std::env::var("INTERNAL_SECRET")?.as_ref()),
+        &validation
+    )?;
+
+    let id = decoded.claims.sub;
+    let users = database.find_all::<DBUser>(Some(doc! { "discord_id": id })).await?;
+    let db_user = users.first().unwrap();
+
+    let claims = TokenClaims {
+        sub: db_user.discord_id.clone(),
+        usr: db_user.discord_name.clone(),
+        iss: "TLS Tournament Admin".to_string(),
+        adm: db_user.admin,
+        exp: chrono::Utc::now().checked_add_days(chrono::Days::new(30)).unwrap(),
     };
     let token = jsonwebtoken::encode(
         &jsonwebtoken::Header::default(),

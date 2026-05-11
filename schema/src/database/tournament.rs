@@ -47,3 +47,14 @@ pub enum TournamentState {
     Running,
     Ended,
 }
+
+impl std::fmt::Display for TournamentState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let v = match self {
+            Self::Upcoming => "Upcoming",
+            Self::Running => "Running",
+            Self::Ended => "Ended",
+        };
+        write!(f, "{v}")
+    }
+}

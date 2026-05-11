@@ -1,81 +1,41 @@
-import type { ReactElement } from 'react'
-import { type ColumnDef, useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
+import { FunctionComponent, JSX, Suspense } from 'react'
 import { Link } from 'react-router'
+import { useAuth } from './useAuth.tsx'
 
-export interface ListPageProps<T> {
-    pageTitle: string
+export interface ListPageProps {
+    title: string
     createTitle: string
     createLink: string
-    data: T[]
-    columns: ColumnDef<T>[]
-    navigation: (id: string) => void
-}
 
-export function ListPage<T>(props: ListPageProps<T>): ReactElement {
-    const { pageTitle, createTitle, createLink, data, columns, navigation } = props
-    const table = useReactTable<T>({
-        data,
-        columns,
-        getCoreRowModel: getCoreRowModel(),
-        // @ts-ignore
-        getRowId: row => row._id['$oid'],
-        enableRowSelection: true,
-        enableMultiRowSelection: false,
-        // @ts-ignore
-        onRowSelectionChange: value => navigation(Object.keys(value())[0]),
-    })
+    children: JSX.Element
+}
+export const ListPage: FunctionComponent<ListPageProps> = props => {
+    const { authenticated, role } = useAuth()
 
     return (
-        <>
-            <div className='row my-4'>
-                <div className='col d-flex justify-content-between'>
-                    <h2>{pageTitle}</h2>
-
+        <div className='d-grid row-gap-4'>
+            <div className='row'>
+                <div className='col-12 d-flex flex-row justify-content-between'>
                     <div>
-                        <Link to={createLink} className='btn btn-primary'>
-                            <i className='bi bi-plus me-2' />
-                            {createTitle}
-                        </Link>
+                        <h2>{props.title}</h2>
                     </div>
+
+                    {authenticated && role === 'ADMIN' ? (
+                        <div>
+                            <Link to={props.createLink} className='btn btn-primary'>
+                                <i className='bi bi-plus-lg me-2' />
+                                {props.createTitle}
+                            </Link>
+                        </div>
+                    ) : null}
                 </div>
             </div>
 
             <div className='row'>
                 <div className='col-12'>
-                    <table className='table table-striped table-hover'>
-                        <thead>
-                            {table.getHeaderGroups().map(headerGroup => (
-                                <tr key={headerGroup.id}>
-                                    {headerGroup.headers.map(header => (
-                                        <th scope='col' key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                      header.column.columnDef.header,
-                                                      header.getContext(),
-                                                  )}
-                                        </th>
-                                    ))}
-                                </tr>
-                            ))}
-                        </thead>
-                        <tbody>
-                            {table.getRowModel().rows.map(row => (
-                                <tr key={row.id} onClick={row.getToggleSelectedHandler()}>
-                                    {row.getVisibleCells().map(cell => (
-                                        <td key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext(),
-                                            )}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <Suspense fallback={<p>Loading data...</p>}>{props.children}</Suspense>
                 </div>
             </div>
-        </>
+        </div>
     )
 }

@@ -17,6 +17,7 @@ pub struct Team {
     pub active: bool,
 
     pub tournaments: Vec<Tournament>,
+    pub captains: Vec<Player>,
     pub players: Vec<Player>,
     pub series: Vec<Series>,
 }
@@ -28,6 +29,7 @@ impl From<DBTeam> for Team {
             short_name: value.short_name,
             active: value.active,
             tournaments: Vec::new(),
+            captains: Vec::new(),
             players: Vec::new(),
             series: Vec::new(),
         }
@@ -78,6 +80,7 @@ impl CollectionType for UpdateTeam {
 pub struct IncludeTeamParams {
     all: bool,
     tournaments: bool,
+    captains: bool,
     players: bool,
     series: bool,
 }
